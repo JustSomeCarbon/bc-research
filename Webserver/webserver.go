@@ -71,6 +71,7 @@ func handleGetBlock(w http.ResponseWriter, r *http.Request) {
  * and the function returns
  */
 func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var m Message
 
 	decoder := json.NewDecoder(r.Body)
@@ -78,6 +79,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		respondWithJson(w, r, http.StatusBadRequest, r.Body)
 		return
 	}
+	spew.Dump(m)
 	defer r.Body.Close()
 
 	newBlock, err := Blockchain.GenerateBlock(Blockchain.Chain[len(Blockchain.Chain)-1], m.Orr)
