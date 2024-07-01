@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	_ "github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv"
@@ -134,13 +135,35 @@ func handleGetBlock(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
- *
+ * parses the request body for message information to build a new block for
+ * the blockchain. if an error occurs, a response is sent to the client
+ * and the function returns
  */
 func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	var m Message
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&m); err != nil {
+		respondWithJson(w, r, http.StatusBadRequest, r.Body)
 		return
 	}
+	defer r.Body.Close()
+
+	newBlock, err := generateBlock(BlockChain[len(BlockChain)-1], m.BPM)
+	if err != nil {
+		respondWithJson(w, r, http.StatusInternalServerError, m)
+		return
+	}
+
+	if isValidBlock(newBlock, BlockChain[len(BlockChain)-1]) {
+		newBlockChain := append(BlockChain, newBlock)
+		replaceChain(newBlockChain)
+		spew.Dump(BlockChain)
+	}
+
+	respondWithJson(w, r, http.StatusCreated, newBlock)
+}
+
+func respondWithJson(w http.ResponseWriter, r *http.Request, code int, payload interface{}) {
+	// do things
 }
