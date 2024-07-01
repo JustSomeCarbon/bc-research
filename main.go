@@ -13,13 +13,14 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	_ "github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv"
 )
 
 type Block struct {
 	Index     int
 	Timestamp string
-	BPM       int
+	Orr       int
 	Hash      string
 	PrevHash  string
 }
@@ -27,10 +28,10 @@ type Block struct {
 var BlockChain []Block
 
 /*
- * calculate the hash of the given block and return the hash as a string value
+ * calculate the hash of the given block and return the hash as a string Orrue
  */
 func calculateHash(block Block) string {
-	record := string(block.Index) + block.Timestamp + string(block.BPM) + block.PrevHash
+	record := string(block.Index) + block.Timestamp + string(block.Orr) + block.PrevHash
 	h := sha256.New()
 	h.Write([]byte(record))
 	hashed := h.Sum(nil)
@@ -40,13 +41,13 @@ func calculateHash(block Block) string {
 /*
  * generate a new block for the blockchain, return the new block
  */
-func generateBlock(oldBlock Block, BPM int) (Block, error) {
+func generateBlock(oldBlock Block, Orr int) (Block, error) {
 	var newBlock Block
 	t := time.Now()
 
 	newBlock.Index = oldBlock.Index + 1
 	newBlock.Timestamp = t.String()
-	newBlock.BPM = BPM
+	newBlock.Orr = Orr
 	newBlock.PrevHash = oldBlock.Hash
 	newBlock.Hash = calculateHash(newBlock)
 
@@ -86,7 +87,7 @@ func replaceChain(newChain []Block) {
  * A struct to hold message information
  */
 type Message struct {
-	BPM int
+	Orr int
 }
 
 /*
@@ -149,7 +150,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	newBlock, err := generateBlock(BlockChain[len(BlockChain)-1], m.BPM)
+	newBlock, err := generateBlock(BlockChain[len(BlockChain)-1], m.Orr)
 	if err != nil {
 		respondWithJson(w, r, http.StatusInternalServerError, m)
 		return
@@ -165,5 +166,31 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondWithJson(w http.ResponseWriter, r *http.Request, code int, payload interface{}) {
-	// do things
+	response, err := json.MarshalIndent(payload, "", " ")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("HTTP 500: Internal Server Error"))
+		return
+	}
+	w.WriteHeader(code)
+	w.Write(response)
+}
+
+/* -- MAIN FUNCTION -- */
+
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		t := time.Now()
+		genesisBlock := Block{0, t.String(), 0, "000", ""}
+		spew.Dump(genesisBlock)
+		BlockChain = append(BlockChain, genesisBlock)
+	}()
+
+	// run the server application
+	log.Fatal(run())
 }
