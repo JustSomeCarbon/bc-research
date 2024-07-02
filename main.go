@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-	"net"
-	"os"
 	"time"
 
 	"github.com/JustSomeCarbon/bc-research/Blockchain"
@@ -21,7 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	Tcpserver.BCServer = make(chan Blockchain.Block)
+	// Tcpserver.BCServer = make(chan Blockchain.Block)
 
 	go func() {
 		t := time.Now()
@@ -30,11 +28,7 @@ func main() {
 		Blockchain.Chain = append(Blockchain.Chain, genesisBlock)
 	}()
 
-	server, err := net.Listen("tcp", ":"+os.Getenv("ADDR"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer server.Close()
+	Tcpserver.Connection()
 
 	// run the server application
 	//log.Fatal(Webserver.Run())
