@@ -82,6 +82,7 @@ func main() {
 
 		select {} // hang forever
 		/* end of listener code */
+
 	} else {
 		ha.SetStreamHandler("p2p/1.0.0", HandleStream)
 
@@ -107,7 +108,7 @@ func main() {
 
 		// start a new stream with the destination
 		// multiaddress of the destination peer is fetched from the peerstore using the 'peerId'
-		s, err := ha.NewStream(context.Background(), peerInfo.ID, "/ipfs/1.0.0")
+		s, err := ha.NewStream(context.Background(), peerInfo.ID, "/p2p/1.0.0")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -119,7 +120,7 @@ func main() {
 		go WriteData(rw)
 		go ReadData(rw)
 
-		select {}
+		select {} // wait forever
 	}
 }
 
