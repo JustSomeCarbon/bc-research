@@ -3,6 +3,7 @@ package Blockchain
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"sync"
 	"time"
 )
 
@@ -15,6 +16,9 @@ type Block struct {
 }
 
 var Chain []Block
+
+// Create a mutex to prevent race conditions
+var Mutex = &sync.Mutex{}
 
 /*
  * calculate the hash of the given block and return the hash as a string Orrue
