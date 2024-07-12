@@ -147,7 +147,7 @@ func MakeBasicHost(listenPort int, secio bool, randseed int64) (host.Host, error
 
 	// define options for the libp2p constructor
 	opts := []libp2p.Option{
-		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", listenPort)),
+		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", listenPort)), // 127.0.0.1
 		libp2p.Identity(priv),
 	}
 
