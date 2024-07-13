@@ -110,8 +110,11 @@ func main() {
 		// multiaddress of the destination peer is fetched from the peerstore using the 'peerId'
 		s, err := ha.NewStream(context.Background(), peerInfo.ID, "/p2p/1.0.0")
 		if err != nil {
+			log.Printf("	Something went wron building a stream...")
 			log.Fatal(err)
 		}
+
+		log.Println("Creating new reader")
 
 		// create a buffered stream so that the read and writes are not blocking
 		rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
@@ -146,29 +149,46 @@ func MakeBasicHost(listenPort int, secio bool, randseed int64) (host.Host, error
 	}
 
 	// define options for the libp2p constructor
+	// construct a new multiaddress to pass as an option for the
+	// multiaddress multiplexer
+	sourceMultiAddr, _ := ma.NewMultiaddr(fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", listenPort)) // 127.0.0.1
+
+	// construct the options array
 	opts := []libp2p.Option{
-		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", listenPort)), // 127.0.0.1
+		libp2p.ListenAddrs(sourceMultiAddr),
 		libp2p.Identity(priv),
 	}
 
+	// if no secure IO. Default doesnt use this, remove...
 	if !secio {
 		//opts = append(opts, libp2p.NoEncryption())
-		log.Printf("no encryption flagged")
+		log.Printf("no encryption flagged, unused secio")
 	}
 
+	// Create a new basic host for the local node utilizing the specified options
+	// return an error if the new host node is not constructed
 	basicHost, err := libp2p.New(opts...)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Printf("Basic Host ID: %s", basicHost.ID().String())
+
 	// build host multiaddress
 	hostAddr, _ := ma.NewMultiaddr(fmt.Sprintf("/ipfs/%s", basicHost.ID().String()))
+
+	// debug view
+	log.Printf("hostAddr defined as: %s\n", hostAddr.String())
+
+	// WHAT DOES THIS DO ???
 
 	// now build full multiaddress to reach this host
 	// by encapsulating both addresses
 	addr := basicHost.Addrs()[0]
 	fullAddr := addr.Encapsulate(hostAddr)
-	log.Printf("I am %s\n", fullAddr) //.String() ?
+	log.Printf("Host Node:: %s\n", fullAddr.String())
+
+	// END OF WHAT DOES THIS DO ???
 
 	return basicHost, nil
 }
